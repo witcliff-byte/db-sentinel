@@ -1,0 +1,10 @@
+---
+# Deploys db-sentinel to a clean Linux host (tested on Rocky/RHEL and Ubuntu).
+# Implemented in Phase 8 of TASKS.md — starts as a stub on purpose.
+- name: Deploy db-sentinel
+  hosts: dbservers
+  become: true
+  tasks:
+    - name: Placeholder — see TASKS.md Phase 8
+      ansible.builtin.debug:
+        msg: "TODO: install python, copy project, create config, install cron job"

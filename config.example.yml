@@ -1,0 +1,21 @@
+# db-sentinel configuration — copy to config.yml and edit
+mysql:
+  host: localhost
+  port: 3306
+  user: backup_user          # create a dedicated user with least privilege
+  password: "CHANGE_ME"      # better: use ~/.my.cnf and leave this empty
+  databases:                 # explicit list; empty list = all non-system DBs
+    - app_db
+    - leads_db
+
+backup:
+  directory: /var/backups/mysql
+  retention_days: 14         # delete backups older than this
+  compress: true
+
+verify:
+  scratch_database: dbsentinel_verify   # dropped and recreated on each verify
+
+alerts:
+  webhook_url: ""            # e.g. Discord/Slack webhook; empty = disabled
+  min_backup_size_bytes: 1024  # alert if a dump is suspiciously small
