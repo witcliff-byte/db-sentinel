@@ -4,7 +4,9 @@ Design: the *logic* of composing a command line is a pure function
 (build_dump_command) so it can be unit-tested without a database. The *effect*
 of running it lives in run_backup, which is covered by integration tests.
 """
+import gzip
 import os
+import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -56,6 +58,20 @@ def dump_env(cfg):
     return env
 
 
+def compress_file(path):
+    """Gzip a file (foo.sql -> foo.sql.gz), remove the original, return the .gz Path.
+
+    Pure file transform — no database involved — so it is unit-tested directly.
+    Streaming via copyfileobj keeps memory flat regardless of dump size.
+    """
+    path = Path(path)
+    gz_path = Path(str(path) + ".gz")
+    with open(path, "rb") as src, gzip.open(gz_path, "wb") as dst:
+        shutil.copyfileobj(src, dst)
+    path.unlink()
+    return gz_path
+
+
 def run_backup(cfg, database, when=None):
     """Dump `database` to a timestamped file and return its Path.
 
@@ -69,4 +85,6 @@ def run_backup(cfg, database, when=None):
     cmd = build_dump_command(cfg, database)
     with open(out_path, "wb") as fh:
         subprocess.run(cmd, stdout=fh, env=dump_env(cfg), check=True)
+    if cfg["backup"].get("compress"):
+        out_path = compress_file(out_path)
     return out_path

@@ -10,7 +10,14 @@ from datetime import datetime
 
 import pytest
 
-from dbsentinel.backup import backup_filename, build_dump_command, run_backup
+import gzip
+
+from dbsentinel.backup import (
+    backup_filename,
+    build_dump_command,
+    compress_file,
+    run_backup,
+)
 
 
 def _cfg():
@@ -64,6 +71,18 @@ def test_backup_filename_uses_colon_free_stamp_for_filesystem_safety():
     name = backup_filename("leads_db", when=datetime(2026, 1, 2, 23, 59))
     assert ":" not in name
     assert name == "leads_db_2026-01-02T23-59.sql"
+
+
+def test_compress_file_gzips_and_removes_original(tmp_path):
+    original = tmp_path / "app_db_2026-07-20T06-00.sql"
+    original.write_text("CREATE TABLE t (id INT);\n")
+
+    gz = compress_file(original)
+
+    assert gz.name == "app_db_2026-07-20T06-00.sql.gz"
+    assert not original.exists()                       # original cleaned up
+    with gzip.open(gz, "rt") as fh:                     # round-trips to valid SQL
+        assert fh.read() == "CREATE TABLE t (id INT);\n"
 
 
 # --- Integration tests (need a live MySQL; run with: pytest -m integration) ---
