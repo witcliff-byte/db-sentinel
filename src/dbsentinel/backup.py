@@ -4,6 +4,7 @@ Design: the *logic* of composing a command line is a pure function
 (build_dump_command) so it can be unit-tested without a database. The *effect*
 of running it lives in run_backup, which is covered by integration tests.
 """
+import os
 from datetime import datetime
 
 
@@ -36,3 +37,18 @@ def backup_filename(database, when=None):
     when = when or datetime.now()
     stamp = when.strftime("%Y-%m-%dT%H-%M")
     return f"{database}_{stamp}.sql"
+
+
+def dump_env(cfg):
+    """Build the environment for the dump subprocess.
+
+    The MySQL password is passed through MYSQL_PWD (read natively by the mysql
+    client tools) instead of a command-line flag, keeping it off `ps aux`.
+    Returns a copy of the current environment, so the parent process is
+    untouched. If no password is configured, nothing is added.
+    """
+    env = dict(os.environ)
+    password = cfg["mysql"].get("password")
+    if password:
+        env["MYSQL_PWD"] = str(password)
+    return env

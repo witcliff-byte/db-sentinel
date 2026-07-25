@@ -40,6 +40,16 @@ def test_build_dump_command_ends_with_the_database_name():
     assert cmd[-1] == "app_db"
 
 
+def test_password_never_leaks_into_the_command_line():
+    # Even when a password is configured, it must not appear in argv:
+    # command-line args are world-readable via `ps aux`. It travels via env.
+    cfg = _cfg()
+    cfg["mysql"]["password"] = "sup3r-s3cret"
+    cmd = build_dump_command(cfg, "app_db")
+    assert "sup3r-s3cret" not in cmd
+    assert not any("password" in part.lower() for part in cmd)
+
+
 def test_backup_filename_embeds_the_injected_timestamp():
     # Injecting `when` makes time an input, so the result is deterministic.
     name = backup_filename("app_db", when=datetime(2026, 7, 20, 6, 0))
