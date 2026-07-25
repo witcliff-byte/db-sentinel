@@ -4,6 +4,7 @@ Design: the *logic* of composing a command line is a pure function
 (build_dump_command) so it can be unit-tested without a database. The *effect*
 of running it lives in run_backup, which is covered by integration tests.
 """
+from datetime import datetime
 
 
 def build_dump_command(cfg, database):
@@ -23,3 +24,15 @@ def build_dump_command(cfg, database):
         "--routines",             # include stored procedures and functions
         database,                 # positional: the database name comes last
     ]
+
+
+def backup_filename(database, when=None):
+    """Return a timestamped backup filename, e.g. 'app_db_2026-07-20T06-00.sql'.
+
+    `when` is injected so callers (and tests) control the clock; it defaults to
+    the current time only in real use. The timestamp avoids ':' so the name is
+    safe on every filesystem.
+    """
+    when = when or datetime.now()
+    stamp = when.strftime("%Y-%m-%dT%H-%M")
+    return f"{database}_{stamp}.sql"
