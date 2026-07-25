@@ -5,7 +5,9 @@ Design: the *logic* of composing a command line is a pure function
 of running it lives in run_backup, which is covered by integration tests.
 """
 import os
+import subprocess
 from datetime import datetime
+from pathlib import Path
 
 
 def build_dump_command(cfg, database):
@@ -52,3 +54,19 @@ def dump_env(cfg):
     if password:
         env["MYSQL_PWD"] = str(password)
     return env
+
+
+def run_backup(cfg, database, when=None):
+    """Dump `database` to a timestamped file and return its Path.
+
+    Thin I/O layer: it composes the command with the pure helpers above, runs
+    mysqldump, and streams stdout straight to the backup file. All the
+    decisions live in the pure functions; this function only performs effects.
+    """
+    directory = Path(cfg["backup"]["directory"])
+    directory.mkdir(parents=True, exist_ok=True)
+    out_path = directory / backup_filename(database, when)
+    cmd = build_dump_command(cfg, database)
+    with open(out_path, "wb") as fh:
+        subprocess.run(cmd, stdout=fh, env=dump_env(cfg), check=True)
+    return out_path
