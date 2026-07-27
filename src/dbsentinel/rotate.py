@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def parse_backup_date(filename: str):
@@ -10,3 +10,18 @@ def parse_backup_date(filename: str):
 
     date_part = match.group(0)
     return datetime.strptime(date_part, "%Y-%m-%dT%H-%M").date()
+
+def find_expired(files, retention_days, today=None):
+    today = today or date.today()
+    cutoff = today - timedelta(days=retention_days)
+    expired = []
+    for filename in files:
+        file_date = parse_backup_date(filename)
+        
+        if file_date is None:
+            continue
+
+        if file_date < cutoff:
+            expired.append(filename)
+    
+    return expired
