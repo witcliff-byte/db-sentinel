@@ -22,6 +22,7 @@ def build_restore_command(cfg, target_db):
         str(mysql.get("port", 3306)),
         "--user",
         str(mysql["user"]),
+        "--ssl=0",
         target_db,
     ]
 
@@ -35,6 +36,7 @@ def _recreate_scratch_db(cfg):
         str(mysql["host"]),
         "--user",
         str(mysql["user"]),
+        "--ssl=0",
         "-e",
         f"DROP DATABASE IF EXISTS {scratch}; CREATE DATABASE {scratch};",
     ]
@@ -47,7 +49,9 @@ def _restore(cfg, target_db, backup_path):
     opener = gzip.open if str(backup_path).endswith(".gz") else open
 
     with opener(backup_path, "rb") as f:
-        subprocess.run(cmd, stdin=f, env=dump_env(cfg), check=True)
+        data = f.read()
+
+    subprocess.run(cmd, input=data, env=dump_env(cfg), check=True)
 
 
 def _list_tables(cfg, database):
@@ -58,6 +62,7 @@ def _list_tables(cfg, database):
         str(mysql["host"]),
         "--user",
         str(mysql["user"]),
+        "--ssl=0",
         "-N",
         "-e",
         f"SHOW TABLES from {database}",
