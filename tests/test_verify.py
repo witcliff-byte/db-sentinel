@@ -1,9 +1,10 @@
 import os
+from datetime import date
 
 import pytest
 
 from dbsentinel.backup import run_backup
-from dbsentinel.verify import build_restore_command, verify_backup
+from dbsentinel.verify import build_restore_command, health_report, verify_backup
 
 
 def _integration_cfg(tmp_path):
@@ -50,3 +51,49 @@ def test_build_restore_command():
 def test_restore_command_never_leaks_the_password():
     resultado = build_restore_command(CFG, "dbsentinel_verify")
     assert "secret" not in " ".join(resultado)
+
+
+def test_health_report_ok_when_todays_backup_exists(tmp_path):
+    today = date(2026, 7, 29)
+    backup_file = tmp_path / f"app_db_{today}T02-00.sql.gz"
+    backup_file.write_text("x" * 2000)
+
+    cfg = {
+        "mysql": {"databases": ["app_db"]},
+        "backup": {"directory": str(tmp_path)},
+        "alerts": {"min_backup_size_bytes": 1024},
+    }
+
+    resultado = health_report(cfg, today=today)
+
+    assert resultado == {"app_db": "ok"}
+
+
+def test_health_report_missing_when_today_backups_not_exists(tmp_path):
+    today = date(2026, 7, 29)
+
+    cfg = {
+        "mysql": {"databases": ["app_db"]},
+        "backup": {"directory": str(tmp_path)},
+        "alerts": {"min_backup_size_bytes": 1024},
+    }
+
+    resultado = health_report(cfg, today=today)
+
+    assert resultado == {"app_db": "missing"}
+
+
+def test_health_report_suspicious_when_size_not_match(tmp_path):
+    today = date(2026, 7, 29)
+    backup_file = tmp_path / f"app_db_{today}T02-00.sql.gz"
+    backup_file.write_text("x" * 20)
+
+    cfg = {
+        "mysql": {"databases": ["app_db"]},
+        "backup": {"directory": str(tmp_path)},
+        "alerts": {"min_backup_size_bytes": 1024},
+    }
+
+    resultado = health_report(cfg, today=today)
+
+    assert resultado == {"app_db": "suspicious"}

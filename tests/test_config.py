@@ -1,14 +1,7 @@
-"""Tests for config loading.
 
-TDD note: this file was written BEFORE src/dbsentinel/config.py existed.
-It is the model for every other module in this project:
-  1. write the test (red)
-  2. implement the minimum to pass (green)
-  3. refactor if needed, tests stay green
-"""
 import pytest
 
-from dbsentinel.config import load_config, ConfigError
+from dbsentinel.config import ConfigError, load_config
 
 
 def _write(tmp_path, text):
@@ -39,7 +32,7 @@ def test_missing_file_raises_config_error(tmp_path):
 
 
 def test_missing_required_section_raises(tmp_path):
-    path = _write(tmp_path, "mysql: {host: localhost}")  # no 'backup' section
+    path = _write(tmp_path, "mysql: {host: localhost}") 
     with pytest.raises(ConfigError):
         load_config(path)
 

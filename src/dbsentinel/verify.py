@@ -1,6 +1,8 @@
 import gzip
 import subprocess
 from dataclasses import dataclass
+from datetime import date
+from pathlib import Path
 
 from dbsentinel.backup import dump_env, ssl_flags
 
@@ -80,3 +82,25 @@ def verify_backup(cfg, backup_path):
     _restore(cfg, target_db, backup_path)
     resultado = _list_tables(cfg, target_db)
     return VerifyResult(ok=True, tables_found=resultado)
+
+
+def health_report(cfg, today=None):
+    today = today or date.today()
+    directory = Path(cfg["backup"]["directory"])
+    min_size = cfg["alerts"]["min_backup_size_bytes"]
+    databases = cfg["mysql"]["databases"]
+
+    report = {}
+    for db in databases:
+        matches = list(directory.glob(f"{db}_{today}*"))
+
+        if not matches:
+            report[db] = "missing"
+        else:
+            size = matches[0].stat().st_size
+            if size < min_size:
+                report[db] = "suspicious"
+            else:
+                report[db] = "ok"
+
+    return report
