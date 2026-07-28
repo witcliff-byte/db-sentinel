@@ -4,6 +4,7 @@ mysql:
   port: 3306
   user: backup_user          # create a dedicated user with least privilege
   password: "CHANGE_ME"      # better: use ~/.my.cnf and leave this empty
+  ssl: true  # set to false only for local/dev environments without TLS configured
   databases:                 # explicit list; empty list = all non-system DBs
     - app_db
     - leads_db

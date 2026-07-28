@@ -4,8 +4,8 @@ Tested on Rocky Linux 9 (RHEL-compatible), also works on Ubuntu.
 
 ### 1. Install MySQL Server
 ​```bash
-sudo dnf install -y mysql-server
-sudo systemctl enable --now mysqld
+sudo dnf install -y mariadb-server
+sudo systemctl enable --now mariadb
 ​```
 or
 ​```bash
@@ -31,3 +31,16 @@ CREATE USER 'backup_user'@'localhost' IDENTIFIED BY 'change_me';
 GRANT SELECT, LOCK TABLES, SHOW VIEW, PROCESS ON *.* TO 'backup_user'@'localhost';
 FLUSH PRIVILEGES;
 ​```
+
+### 4. Running the integration tests
+
+Integration tests are deselected by default (`pytest -m "not integration"`) since
+they need a reachable MySQL/MariaDB server. Point them at your server via
+environment variables — never hardcode credentials in the test files:
+
+​```bash
+DBS_TEST_HOST=<ip> DBS_TEST_PORT=3306 DBS_TEST_USER=backup_user DBS_TEST_PASSWORD=<pass> pytest -m integration -v
+​```
+
+Unset variables fall back to `127.0.0.1:3306` / `backup_user` with an empty
+password, suitable for a local dev server with no password set.

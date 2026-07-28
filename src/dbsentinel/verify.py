@@ -2,7 +2,7 @@ import gzip
 import subprocess
 from dataclasses import dataclass
 
-from dbsentinel.backup import dump_env
+from dbsentinel.backup import dump_env, ssl_flags
 
 
 @dataclass
@@ -22,7 +22,7 @@ def build_restore_command(cfg, target_db):
         str(mysql.get("port", 3306)),
         "--user",
         str(mysql["user"]),
-        "--ssl=0",
+        *ssl_flags(cfg),
         target_db,
     ]
 
@@ -36,7 +36,7 @@ def _recreate_scratch_db(cfg):
         str(mysql["host"]),
         "--user",
         str(mysql["user"]),
-        "--ssl=0",
+        *ssl_flags(cfg),
         "-e",
         f"DROP DATABASE IF EXISTS {scratch}; CREATE DATABASE {scratch};",
     ]
@@ -62,7 +62,7 @@ def _list_tables(cfg, database):
         str(mysql["host"]),
         "--user",
         str(mysql["user"]),
-        "--ssl=0",
+        *ssl_flags(cfg),
         "-N",
         "-e",
         f"SHOW TABLES from {database}",
