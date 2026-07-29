@@ -2,7 +2,7 @@ import sys
 
 from dbsentinel.config import load_config
 from dbsentinel.verify import health_report
-from scripts.run_backup import cfg
+
 
 cfg = load_config("config.yml")
 report = health_report(cfg)
