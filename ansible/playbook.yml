@@ -1,10 +1,22 @@
 ---
-# Deploys db-sentinel to a clean Linux host (tested on Rocky/RHEL and Ubuntu).
-# Implemented in Phase 8 of TASKS.md — starts as a stub on purpose.
-- name: Deploy db-sentinel
+- name: Deploy dbsentinel
   hosts: dbservers
   become: true
   tasks:
-    - name: Placeholder — see TASKS.md Phase 8
-      ansible.builtin.debug:
-        msg: "TODO: install python, copy project, create config, install cron job"
+    - name: Install required packages
+      ansible.builtin.dnf:
+        name:
+          - git
+          - python3
+        state: present
+    - name: Create /opt/db-sentinel
+      ansible.builtin.file:
+        path: /opt/db-sentinel
+        state: directory
+        mode: '0755'
+    - name: Clone repo
+      ansible.builtin.git:
+        repo: https://github.com/witcliff-byte/db-sentinel.git
+        dest: /opt/db-sentinel
+        accept_hostkey: true
+
