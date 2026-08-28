@@ -2,6 +2,14 @@
 - name: Deploy dbsentinel
   hosts: dbservers
   become: true
+  vars:
+    db_host: 127.0.0.1
+    db_port: 3306
+    db_user: backup_user
+    db_ssl: false
+    db_names: [app_db, leads_db]
+    backup_dir: /home/rocky-db/backups
+    retention_days: 7
   tasks:
     - name: Install required packages
       ansible.builtin.dnf:
@@ -19,4 +27,9 @@
         repo: https://github.com/witcliff-byte/db-sentinel.git
         dest: /opt/db-sentinel
         accept_hostkey: true
+    - name: Deploy db-sentinel configuration
+      ansible.builtin.template:
+        src: templates/config.yml.j2
+        dest: /opt/db-sentinel/config.yml
+        mode: '0600'
 

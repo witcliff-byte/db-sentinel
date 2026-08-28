@@ -1,0 +1,15 @@
+mysql:
+  host: {{ db_host }}
+  port: {{ db_port }}
+  user: {{ db_user }}
+  password: "{{ db_password }}"
+  ssl: {{ db_ssl }}
+  databases:
+{% for db in db_names %}
+    - {{ db }}
+{% endfor %}
+
+backup:
+  directory: {{ backup_dir }}
+  retention_days: {{ retention_days }}
+
