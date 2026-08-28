@@ -1,6 +1,19 @@
 pipeline {
     agent any
 
+    environmen {
+        PYTHON_VERSION = '3.13'
+    }
+
+    options {
+        timeout(time: 10, unitt: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
+    triggers {
+        pollSCM('H/5 * * * *')
+    }
+
     stages {
         stage('Checkout') {
             steps {
