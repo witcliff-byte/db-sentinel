@@ -8,6 +8,7 @@
     db_user: backup_user
     db_ssl: false
     db_names: [app_db, leads_db]
+    db_password: "{{ vault_db_password }}"
     backup_dir: /home/rocky-db/backups
     retention_days: 7
   tasks:
