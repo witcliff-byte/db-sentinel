@@ -1,0 +1,7 @@
+#SPDX-License-Identifier: MIT-0
+---
+# handlers file for roles/db_sentinel
+    - name: Restart db-sentinel timer
+      ansible.builtin.systemd:
+        name: db-sentinel.timer
+        state: restarted

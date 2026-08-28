@@ -1,0 +1,11 @@
+#SPDX-License-Identifier: MIT-0
+---
+# vars file for roles/db_sentinel
+db_host: 127.0.0.1
+db_port: 3306
+db_user: backup_user
+db_ssl: false
+db_names: [app_db, leads_db]
+db_password: "{{ vault_db_password }}"
+backup_dir: /home/rocky-db/backups
+retention_days: 7
