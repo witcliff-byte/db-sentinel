@@ -2,7 +2,26 @@ pipeline {
     agent any
 
     environment {
-        PYTHON_VERSION = '3.13'
+        // The agent image installs Debian's default python3 (see ci/jenkins/Dockerfile).
+        // Point this at a different interpreter to pin a version -- it must already
+        // exist on the agent, so bump the Dockerfile first.
+        PYTHON_BIN = 'python3'
+        // Pinned: ruff's default rule set shifts between releases and Lint is a
+        // binding gate. Rules live in [tool.ruff.lint] in pyproject.toml.
+        RUFF_VERSION = '0.16.6'
+    }
+
+    parameters {
+        string(
+            name: 'DBS_TEST_HOST',
+            defaultValue: '192.168.122.236',
+            description: 'MySQL host for the integration suite (Vagrant guest IP by default)'
+        )
+        string(
+            name: 'DBS_TEST_USER',
+            defaultValue: 'backup_user',
+            description: 'MySQL user the integration suite connects as'
+        )
     }
 
     options {
@@ -19,7 +38,11 @@ pipeline {
 
         stage('Setup'){
             steps{
-                sh 'python3 -m venv .venv'
+                // The workspace is reused between builds, so a stale .venv would
+                // mask dependency changes. Rebuild it every time.
+                sh 'rm -rf .venv'
+                sh "${PYTHON_BIN} -m venv .venv"
+                sh '.venv/bin/python --version'
                 sh '.venv/bin/pip install -r requirements.txt'
                 sh '.venv/bin/pip install -e .'
             }
@@ -27,8 +50,8 @@ pipeline {
 
         stage('Lint'){
             steps {
-                sh '.venv/bin/pip install ruff'
-                sh '.venv/bin/ruff check src/ tests/ || true'
+                sh ".venv/bin/pip install ruff==${RUFF_VERSION}"
+                sh '.venv/bin/ruff check src/ tests/'
             }
         }
 
@@ -38,30 +61,32 @@ pipeline {
             }
             post {
                 always {
-                    junit 'result.xml'
+                    junit 'results.xml'
                 }
             }
         }
 
         stage('Integration Tests') {
+            // env.BRANCH_NAME is only set by multibranch jobs; this is a pipeline-
+            // from-SCM job, so fall back to GIT_BRANCH ("origin/main") from checkout.
             when {
-                branch 'main'
+                expression {
+                    (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst(/^origin\//, '') == 'main'
+                }
             }
             environment {
                 DBS_TEST_PASSWORD = credentials('dbs-test-password')
+                DBS_TEST_HOST = "${params.DBS_TEST_HOST}"
+                DBS_TEST_USER = "${params.DBS_TEST_USER}"
             }
             steps {
-                sh '''
-                    DBS_TEST_HOST=192.168.122.236 \
-                    DBS_TEST_USER=backup_user \
-                    .venv/bin/pytest -m integration -v
-                '''
+                sh '.venv/bin/pytest -m integration -v'
             }
         }
     }
 
     post {
-        success { echo '✅ Pipeline succeded'}
+        success { echo '✅ Pipeline succeeded'}
         failure { echo '❌ Pipeline failed'}
     }
 }

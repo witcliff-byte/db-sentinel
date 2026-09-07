@@ -32,7 +32,7 @@ def test_missing_file_raises_config_error(tmp_path):
 
 
 def test_missing_required_section_raises(tmp_path):
-    path = _write(tmp_path, "mysql: {host: localhost}") 
+    path = _write(tmp_path, "mysql: {host: localhost}")
     with pytest.raises(ConfigError):
         load_config(path)
 

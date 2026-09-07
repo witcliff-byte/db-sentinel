@@ -11,3 +11,12 @@ addopts = "-m 'not integration'"
 markers = [
     "integration: requires a reachable MySQL server (deselected by default)",
 ]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+# Pinned explicitly. Ruff's *default* rule set changes between releases (0.16
+# started enforcing flake8-datetimez), and the Lint stage is a binding gate --
+# an unpinned default would turn a ruff upgrade into a red pipeline.
+select = ["E", "F", "W", "I"]

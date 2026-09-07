@@ -1,1 +1,4 @@
-"""notify module — implemented test-first. See TASKS.md, write the test before the code."""
+"""notify module — implemented test-first.
+
+See TASKS.md, write the test before the code.
+"""
