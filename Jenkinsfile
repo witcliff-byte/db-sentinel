@@ -83,6 +83,18 @@ pipeline {
                 sh '.venv/bin/pytest -m integration -v'
             }
         }
+
+        stage('Deploy') {
+            when { branch 'main' }
+            environment {
+                ANSIBLE_VAULT_PASSWORD_FILE = credentials('ansible-vault-pass')
+            }
+            steps {
+                sh '''
+                    ansible-playbook -i ansible/inventory.ini ansible/deploy.yml --check --diff
+                '''
+            }
+        }
     }
 
     post {
