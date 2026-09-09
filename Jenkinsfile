@@ -91,7 +91,7 @@ pipeline {
             }
             steps {
                 sh '''
-                    ansible-playbook -i ansible/inventory.ini ansible/deploy.yml --check --diff
+                    ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --check --diff
                 '''
             }
         }
